@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/config"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/db"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/handlers"
-	"github.com/can4hou6joeng4/ticket-booking-project-v1/middlewares"
-	"github.com/can4hou6joeng4/ticket-booking-project-v1/repositories"
+	repositorys "github.com/can4hou6joeng4/ticket-booking-project-v1/repositories"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,7 +27,8 @@ func main() {
 	authService := services.NewAuthService(authRepository)
 	// Routing
 	server := app.Group("/api")
-	privateRoutes := server.Use(middlewares.AuthProtected(db))
+	// TODO add privateRoutes
+	// privateRoutes := server.Use(middlewares.AuthProtected(db))
 	// Handlers
 	handlers.NewEventHandler(server.Group("/event"), eventRepository)
 	handlers.NewTicketHandler(server.Group("/ticket"), ticketRepository)
