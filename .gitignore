@@ -2,3 +2,4 @@
 .env
 .air.toml
 *.txt
+/tmp/*
