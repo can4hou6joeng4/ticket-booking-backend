@@ -16,7 +16,7 @@ import (
 func AuthProtected(db *gorm.DB) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		authHeader := ctx.Get("Authorization")
-		if authHeader == "" {
+		if authHeader == " " {
 			log.Warnf("empty authorization header")
 
 			return ctx.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
@@ -57,7 +57,8 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 
 		userId := token.Claims.(jwt.MapClaims)["id"]
 
-		if err := db.Model(&models.User{}).Where("id = ?", userId).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		var user models.User
+		if err := db.Model(&models.User{}).Where("id = ?", userId).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warnf("user not found in the db")
 
 			return ctx.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
@@ -66,7 +67,16 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		ctx.Locals("userId",userId)
+		// 检查是否是管理员路由
+		if strings.Contains(ctx.Path(), "/statistics") && user.Role != models.Manager {
+			return ctx.Status(fiber.StatusForbidden).JSON(&fiber.Map{
+				"status":  "fail",
+				"message": "需要管理员权限",
+			})
+		}
+
+		ctx.Locals("userId", userId)
+		ctx.Locals("userRole", user.Role)
 		return ctx.Next()
 	}
 }

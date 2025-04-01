@@ -7,7 +7,7 @@ import (
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/db"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/handlers"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/middlewares"
-	repositorys "github.com/can4hou6joeng4/ticket-booking-project-v1/repositories"
+	"github.com/can4hou6joeng4/ticket-booking-project-v1/repositories"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,9 +21,10 @@ func main() {
 	envConfig := config.NewEnvConfig()
 	db := db.Init(envConfig, db.DBMigrator)
 	// Repository
-	eventRepository := repositorys.NewEventRepository(db)
-	ticketRepository := repositorys.NewTicketRepository(db)
-	authRepository := repositorys.NewAuthRepository(db)
+	eventRepository := repositories.NewEventRepository(db)
+	ticketRepository := repositories.NewTicketRepository(db)
+	authRepository := repositories.NewAuthRepository(db)
+	statisticsRepository := repositories.NewStatisticsRepository(db)
 	// Service
 	authService := services.NewAuthService(authRepository)
 	// Routing
@@ -34,6 +35,7 @@ func main() {
 
 	handlers.NewEventHandler(privateRoutes.Group("/event"), eventRepository)
 	handlers.NewTicketHandler(privateRoutes.Group("/ticket"), ticketRepository)
+	handlers.NewStatisticsHandler(privateRoutes.Group("/statistics"), statisticsRepository)
 
 	app.Listen(fmt.Sprintf(":" + envConfig.ServerPort))
 }

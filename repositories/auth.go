@@ -1,7 +1,8 @@
-package repositorys
+package repositories
 
 import (
 	"context"
+
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/models"
 	"gorm.io/gorm"
 )
