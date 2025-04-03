@@ -1,0 +1,394 @@
+basePath: /api
+definitions:
+  handlers.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.AuthCredentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.Event:
+    properties:
+      createdAt:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      name:
+        type: string
+      totalTicketsEntered:
+        type: integer
+      totalTicketsPurchased:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  models.Ticket:
+    properties:
+      createdAt:
+        type: string
+      entered:
+        type: boolean
+      event:
+        $ref: '#/definitions/models.Event'
+      eventId:
+        type: integer
+      id:
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: can4hou6joeng4@163.com
+    name: API Support
+    url: https://github.com/can4hou6joeng4
+  description: A ticket booking system API server.
+  title: Ticket Booking API
+  version: "1.0"
+paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Login user
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and return JWT token
+      parameters:
+      - description: Registration credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Register new user
+      tags:
+      - auth
+  /api/event:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all events from the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all events
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: Create a new event in the system
+      parameters:
+      - description: Event object
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/models.Event'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new event
+      tags:
+      - events
+  /api/event/{eventId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete event
+      tags:
+      - events
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get event by ID
+      tags:
+      - events
+    put:
+      consumes:
+      - application/json
+      description: Update an existing event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        type: integer
+      - description: Event update data
+        in: body
+        name: event
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Update event
+      tags:
+      - events
+  /api/statistics/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve statistics for the dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard statistics
+      tags:
+      - statistics
+  /api/ticket:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all tickets for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all tickets
+      tags:
+      - tickets
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket for an event
+      parameters:
+      - description: Ticket object
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Ticket'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Create new ticket
+      tags:
+      - tickets
+  /api/ticket/{ticketId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific ticket by its ID with QR code
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticketId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Get ticket by ID
+      tags:
+      - tickets
+  /api/ticket/{ticketId}/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticketId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Validate ticket
+      tags:
+      - tickets
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

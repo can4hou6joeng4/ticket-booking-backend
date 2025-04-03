@@ -12,6 +12,15 @@ type StatisticsHandler struct {
 	repository models.StatisticsRepository
 }
 
+// @Summary      Get dashboard statistics
+// @Description  Retrieve statistics for the dashboard
+// @Tags         statistics
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  Response
+// @Failure      500  {object}  Response
+// @Router       /api/statistics/dashboard [get]
 func (h *StatisticsHandler) GetDashboardStatistics(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -28,6 +37,7 @@ func (h *StatisticsHandler) GetDashboardStatistics(ctx *fiber.Ctx) error {
 		"data":     count,
 	})
 }
+
 func NewStatisticsHandler(router fiber.Router, repository models.StatisticsRepository) {
 	handler := &StatisticsHandler{
 		repository: repository,

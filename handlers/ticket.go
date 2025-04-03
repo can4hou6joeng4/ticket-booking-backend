@@ -15,6 +15,17 @@ type TicketHandler struct {
 	repository models.TicketRepository
 }
 
+// @Summary      Create new ticket
+// @Description  Create a new ticket for an event
+// @Tags         tickets
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        ticket body models.Ticket true "Ticket object"
+// @Success      201  {object}  Response
+// @Failure      400  {object}  Response
+// @Failure      422  {object}  Response
+// @Router       /api/ticket [post]
 func (h *TicketHandler) CreateOne(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -41,6 +52,17 @@ func (h *TicketHandler) CreateOne(ctx *fiber.Ctx) error {
 		"data":    ticket,
 	})
 }
+
+// @Summary      Get ticket by ID
+// @Description  Retrieve a specific ticket by its ID with QR code
+// @Tags         tickets
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        ticketId path int true "Ticket ID"
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
+// @Router       /api/ticket/{ticketId} [get]
 func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -78,6 +100,16 @@ func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 		},
 	})
 }
+
+// @Summary      Get all tickets
+// @Description  Retrieve all tickets for the authenticated user
+// @Tags         tickets
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
+// @Router       /api/ticket [get]
 func (h *TicketHandler) GetMany(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -95,6 +127,17 @@ func (h *TicketHandler) GetMany(ctx *fiber.Ctx) error {
 		"data":    tickets,
 	})
 }
+
+// @Summary      Validate ticket
+// @Description  Validate a ticket by its ID
+// @Tags         tickets
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        ticketId path int true "Ticket ID"
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
+// @Router       /api/ticket/{ticketId}/validate [post]
 func (h *TicketHandler) ValidateOne(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -120,6 +163,7 @@ func (h *TicketHandler) ValidateOne(ctx *fiber.Ctx) error {
 		"data":    ticket,
 	})
 }
+
 func NewTicketHandler(router fiber.Router, repository models.TicketRepository) {
 	handler := &TicketHandler{
 		repository: repository,
