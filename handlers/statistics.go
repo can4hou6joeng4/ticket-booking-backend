@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"context"
-	"time"
-
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/models"
+	"github.com/can4hou6joeng4/ticket-booking-project-v1/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,24 +16,18 @@ type StatisticsHandler struct {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  Response
-// @Failure      500  {object}  Response
+// @Success      200  {object}  utils.Response
+// @Failure      500  {object}  utils.Response
 // @Router       /api/statistics/dashboard [get]
 func (h *StatisticsHandler) GetDashboardStatistics(ctx *fiber.Ctx) error {
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	context, cancel := utils.CreateTimeoutContext(0)
 	defer cancel()
 	count, err := h.repository.GetCount(context)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to get statistics",
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, err)
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":   "success",
-		"messages": "",
-		"data":     count,
-	})
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "", count)
 }
 
 func NewStatisticsHandler(router fiber.Router, repository models.StatisticsRepository) {

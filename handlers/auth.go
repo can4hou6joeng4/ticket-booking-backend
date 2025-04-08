@@ -1,23 +1,16 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/models"
+	"github.com/can4hou6joeng4/ticket-booking-project-v1/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
 type AuthHandler struct {
 	service models.AuthService
-}
-
-type Response struct {
-	Status  string      `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
 }
 
 var validate = validator.New()
@@ -28,41 +21,26 @@ var validate = validator.New()
 // @Accept       json
 // @Produce      json
 // @Param        credentials body models.AuthCredentials true "Login credentials"
-// @Success      200  {object}  Response
-// @Failure      400  {object}  Response
+// @Success      200  {object}  utils.Response
+// @Failure      400  {object}  utils.Response
 // @Router       /api/auth/login [post]
 func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
 	creds := &models.AuthCredentials{}
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	context, cancel := utils.CreateTimeoutContext(0)
 	defer cancel()
 	if err := ctx.BodyParser(&creds); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-			"data":    nil,
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
 	if err := validate.Struct(creds); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-			"data":    nil,
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
 	token, user, err := h.service.Login(context, creds)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Successfully logged in",
-		"data": &fiber.Map{
-			"token": token,
-			"user":  user,
-		},
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "Successfully logged in", map[string]interface{}{
+		"token": token,
+		"user":  user,
 	})
 }
 
@@ -72,40 +50,26 @@ func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
 // @Accept       json
 // @Produce      json
 // @Param        credentials body models.AuthCredentials true "Registration credentials"
-// @Success      200  {object}  Response
-// @Failure      400  {object}  Response
+// @Success      200  {object}  utils.Response
+// @Failure      400  {object}  utils.Response
 // @Router       /api/auth/register [post]
 func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 	creds := &models.AuthCredentials{}
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	context, cancel := utils.CreateTimeoutContext(0)
 	defer cancel()
 	if err := ctx.BodyParser(&creds); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-			"data":    nil,
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
 	if err := validate.Struct(creds); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": fmt.Errorf("please provide a valid email and password").Error(),
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, fmt.Errorf("please provide a valid email and password"))
 	}
 	token, user, err := h.service.Register(context, creds)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Successfully logged in",
-		"data": &fiber.Map{
-			"token": token,
-			"user":  user,
-		},
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "Successfully registered", map[string]interface{}{
+		"token": token,
+		"user":  user,
 	})
 }
 
@@ -115,25 +79,19 @@ func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  Response
-// @Failure      400  {object}  Response
+// @Success      200  {object}  utils.Response
+// @Failure      400  {object}  utils.Response
 // @Router       /api/auth/logout [post]
 func (h *AuthHandler) Logout(ctx *fiber.Ctx) error {
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	context, cancel := utils.CreateTimeoutContext(0)
 	defer cancel()
 
 	userId := ctx.Locals("userId").(uint)
 	if err := h.service.Logout(context, userId); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Successfully logged out",
-	})
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "Successfully logged out", nil)
 }
 
 func NewAuthHandler(router fiber.Router, service models.AuthService) {
