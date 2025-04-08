@@ -68,7 +68,7 @@ func main() {
 	handlers.NewAuthProtectedHandler(privateRoutes.Group("/auth"), authService)
 
 	handlers.NewEventHandler(privateRoutes.Group("/event"), eventRepository)
-	handlers.NewTicketHandler(privateRoutes.Group("/ticket"), ticketRepository)
+	handlers.NewTicketHandler(privateRoutes.Group("/ticket"), ticketRepository, eventRepository, envConfig, redis)
 	handlers.NewStatisticsHandler(privateRoutes.Group("/statistics"), statisticsRepository)
 
 	app.Listen(fmt.Sprintf(":%s", envConfig.ServerPort))

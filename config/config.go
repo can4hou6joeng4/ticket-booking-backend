@@ -10,6 +10,7 @@ type EnvConfig struct {
 	ServerPort  string `env:"SERVER_PORT,required"`
 	DBConfig    DBConfig
 	RedisConfig RedisConfig
+	QRConfig    QRConfig
 }
 
 type DBConfig struct {
@@ -27,6 +28,12 @@ type RedisConfig struct {
 	RedisDB       int    `env:"REDIS_DB,required"`
 }
 
+type QRConfig struct {
+	QRSize      int    `env:"QR_SIZE,required"`
+	QRLevel     string `env:"QR_LEVEL,required"`
+	QRCacheTime int    `env:"QR_CACHE_TIME,required"`
+}
+
 func NewEnvConfig() *EnvConfig {
 	err := godotenv.Load()
 	if err != nil {
@@ -40,15 +47,20 @@ func NewEnvConfig() *EnvConfig {
 
 	dbConfig := &DBConfig{}
 	redisConfig := &RedisConfig{}
+	qrConfig := &QRConfig{}
 	if err = env.Parse(dbConfig); err != nil {
 		log.Fatal("Unable to parse DB config: %v", err)
 	}
 	if err = env.Parse(redisConfig); err != nil {
 		log.Fatal("Unable to parse Redis config: %v", err)
 	}
+	if err = env.Parse(qrConfig); err != nil {
+		log.Fatal("Unable to parse QR config: %v", err)
+	}
 
 	config.DBConfig = *dbConfig
 	config.RedisConfig = *redisConfig
+	config.QRConfig = *qrConfig
 
 	return config
 }

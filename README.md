@@ -17,6 +17,15 @@
   - 票务分类管理
   - 票务库存管理
   - 票务状态追踪
+  - 动态二维码生成
+  - 基于活动时间的二维码过期机制
+  - 票务验证系统
+
+- **活动管理**
+  - 活动信息CRUD
+  - 活动时间管理（开始时间、结束时间）
+  - 活动状态追踪
+  - 活动统计功能
 
 - **订单系统**
   - 订单创建与支付
@@ -32,6 +41,8 @@
   - 日志系统
   - 错误处理
   - 数据验证
+  - 并发控制
+  - 数据一致性保证
 
 ## 🛠️ 技术栈
 
@@ -49,6 +60,7 @@
 | **文档** | ![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger) | 2.0 | API文档生成 |
 | **容器** | ![Docker](https://img.shields.io/badge/Docker-24.0-2496ED?style=flat&logo=docker) | 24.0 | 容器化部署 |
 | **开发工具** | ![Air](https://img.shields.io/badge/Air-1.49-00ADD8?style=flat&logo=go) | 1.49 | 热重载工具 |
+| **二维码** | ![QRCode](https://img.shields.io/badge/QRCode-1.0-000000?style=flat&logo=qrcode) | 1.0 | 二维码生成 |
 
 </div>
 
@@ -102,103 +114,28 @@ make test
 make build
 ```
 
-## 📁 项目结构
+## 📝 更新日志
 
-```
-.
-├── cmd/
-│   └── main.go                 # 应用程序入口
-├── config/
-│   ├── config.go              # 配置结构体
-│   └── env.go                 # 环境变量配置
-├── db/
-│   ├── migrations/            # 数据库迁移文件
-│   └── seeder/               # 数据库种子数据
-├── docs/
-│   └── swagger/              # Swagger文档
-├── handlers/
-│   ├── auth.go               # 认证处理器
-│   ├── ticket.go             # 票务处理器
-│   └── order.go              # 订单处理器
-├── middlewares/
-│   ├── auth.go               # 认证中间件
-│   ├── logger.go             # 日志中间件
-│   └── error.go              # 错误处理中间件
-├── models/
-│   ├── user.go               # 用户模型
-│   ├── ticket.go             # 票务模型
-│   └── order.go              # 订单模型
-├── repositories/
-│   ├── user.go               # 用户数据访问
-│   ├── ticket.go             # 票务数据访问
-│   └── order.go              # 订单数据访问
-├── services/
-│   ├── auth.go               # 认证服务
-│   ├── ticket.go             # 票务服务
-│   └── order.go              # 订单服务
-├── utils/
-│   ├── jwt.go                # JWT工具
-│   ├── redis.go              # Redis工具
-│   ├── validator.go          # 验证工具
-│   └── logger.go             # 日志工具
-├── .env                      # 环境变量
-├── .air.toml                 # Air配置
-├── docker-compose.yaml       # Docker Compose配置
-├── Dockerfile                # Docker配置
-├── go.mod                    # Go模块文件
-└── go.sum                    # Go依赖校验
-```
-
-## 📝 API文档
-
-项目使用Swagger自动生成API文档，启动服务后可以通过以下地址访问：
-```
-http://localhost:8081/swagger/index.html
-```
-
-### 认证相关API
-
-#### 公开接口
-- `POST /api/auth/login` - 用户登录
-- `POST /api/auth/register` - 用户注册
-
-#### 需要认证的接口
-- `POST /api/auth/logout` - 用户登出
-
-## 🔒 环境变量
-
-主要环境变量配置：
-- `DB_HOST`: 数据库主机
-- `DB_NAME`: 数据库名称
-- `DB_USER`: 数据库用户
-- `DB_PASSWORD`: 数据库密码
-- `REDIS_HOST`: Redis主机
-- `REDIS_PORT`: Redis端口
-- `REDIS_PASSWORD`: Redis密码
-- `REDIS_DB`: Redis数据库编号
-- `JWT_SECRET`: JWT密钥
-- `PORT`: 服务端口
-- `LOG_LEVEL`: 日志级别
-- `ENVIRONMENT`: 运行环境
-
-## 🤝 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+### v1.0.1 (2024-04-08)
+- 新增动态二维码生成功能
+- 实现基于活动时间的二维码过期机制
+- 优化票务验证系统
+- 完善活动时间管理
+- 改进错误处理机制
+- 优化代码结构和可维护性
+- 增强数据一致性保证
+- 添加并发控制机制
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件 
+MIT License
 
 ## 📝 TODO 列表
 
 ### 功能增强
 - [✓] 实现用户登出功能
 - [ ] 集成支付网关（支付宝、微信支付）
-- [ ] 添加票务二维码生成与验证
+- [✓] 添加票务二维码生成与验证
 - [ ] 实现票务转赠功能
 - [ ] 添加票务收藏功能
 - [ ] 实现票务搜索和筛选功能

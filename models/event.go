@@ -14,6 +14,7 @@ type Event struct {
 	TotalTicketsPurchased int64     `json:"totalTicketsPurchased" gorm:"-"`
 	TotalTicketsEntered   int64     `json:"totalTicketsEntered" gorm:"-"`
 	Date                  time.Time `json:"date"`
+	EndDate               time.Time `json:"endDate"`
 	CreatedAt             time.Time `json:"createdAt"`
 	UpdatedAt             time.Time `json:"updatedAt"`
 }
