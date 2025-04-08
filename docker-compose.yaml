@@ -16,6 +16,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - .:/src/app
     command: air -c .air.toml
@@ -35,13 +37,36 @@ services:
     networks:
       - application
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:alpine
+    container_name: ticket-booking-redis
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB}
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - application
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 networks:
   application:
 
+
 volumes:
   postgres-db:
+  redis-data:

@@ -7,7 +7,9 @@
 - **用户管理**
   - 用户注册与登录
   - 角色权限管理
-  - JWT认证授权
+  - JWT + Redis 混合认证授权
+  - 用户会话管理
+  - 主动登出功能
   - 个人信息管理
 
 - **票务管理**
@@ -26,6 +28,7 @@
   - Swagger API文档
   - Docker容器化部署
   - 数据库迁移支持
+  - Redis缓存支持
   - 日志系统
   - 错误处理
   - 数据验证
@@ -39,6 +42,7 @@
 | **后端** | ![Go](https://img.shields.io/badge/Go-1.24-blue?style=flat&logo=go) | 1.24 | 高性能编程语言 |
 | **Web框架** | ![Fiber](https://img.shields.io/badge/Fiber-v2-00ADD8?style=flat&logo=go) | v2 | 高性能Web框架 |
 | **数据库** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat&logo=postgresql) | 15+ | 关系型数据库 |
+| **缓存** | ![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat&logo=redis) | 7.0 | 内存数据库 |
 | **ORM** | ![GORM](https://img.shields.io/badge/GORM-v1.25-00ADD8?style=flat&logo=go) | v1.25 | Go ORM库 |
 | **认证** | ![JWT](https://img.shields.io/badge/JWT-v5-000000?style=flat&logo=jsonwebtokens) | v5 | 身份认证 |
 | **配置** | ![godotenv](https://img.shields.io/badge/godotenv-v1.5-ECD53F?style=flat&logo=dotenv) | v1.5 | 环境变量管理 |
@@ -53,6 +57,7 @@
 - Go 1.24+
 - Docker & Docker Compose
 - PostgreSQL 15+
+- Redis 7.0+
 - 内存: 4GB+
 - 磁盘空间: 10GB+
 
@@ -133,6 +138,7 @@ make build
 │   └── order.go              # 订单服务
 ├── utils/
 │   ├── jwt.go                # JWT工具
+│   ├── redis.go              # Redis工具
 │   ├── validator.go          # 验证工具
 │   └── logger.go             # 日志工具
 ├── .env                      # 环境变量
@@ -150,6 +156,15 @@ make build
 http://localhost:8081/swagger/index.html
 ```
 
+### 认证相关API
+
+#### 公开接口
+- `POST /api/auth/login` - 用户登录
+- `POST /api/auth/register` - 用户注册
+
+#### 需要认证的接口
+- `POST /api/auth/logout` - 用户登出
+
 ## 🔒 环境变量
 
 主要环境变量配置：
@@ -157,6 +172,10 @@ http://localhost:8081/swagger/index.html
 - `DB_NAME`: 数据库名称
 - `DB_USER`: 数据库用户
 - `DB_PASSWORD`: 数据库密码
+- `REDIS_HOST`: Redis主机
+- `REDIS_PORT`: Redis端口
+- `REDIS_PASSWORD`: Redis密码
+- `REDIS_DB`: Redis数据库编号
 - `JWT_SECRET`: JWT密钥
 - `PORT`: 服务端口
 - `LOG_LEVEL`: 日志级别
@@ -177,6 +196,7 @@ http://localhost:8081/swagger/index.html
 ## 📝 TODO 列表
 
 ### 功能增强
+- [✓] 实现用户登出功能
 - [ ] 集成支付网关（支付宝、微信支付）
 - [ ] 添加票务二维码生成与验证
 - [ ] 实现票务转赠功能
@@ -185,7 +205,7 @@ http://localhost:8081/swagger/index.html
 - [ ] 添加票务推荐系统
 
 ### 性能优化
-- [ ] 实现Redis缓存层
+- [✓] 实现Redis缓存层
 - [ ] 添加数据库读写分离
 - [ ] 优化数据库查询性能
 - [ ] 实现API限流功能

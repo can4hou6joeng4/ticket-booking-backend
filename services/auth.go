@@ -4,17 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/models"
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"os"
-	"time"
 )
 
 type AuthService struct {
 	repository models.AuthRepository
+	redis      *redis.Client
 }
 
 func (s *AuthService) Login(ctx context.Context, loginData *models.AuthCredentials) (string, *models.User, error) {
@@ -65,8 +68,13 @@ func (s *AuthService) Register(ctx context.Context, registerData *models.AuthCre
 	return token, user, nil
 }
 
-func NewAuthService(repository models.AuthRepository) models.AuthService {
+func (s *AuthService) Logout(ctx context.Context, userId uint) error {
+	return utils.DeleteUserSession(s.redis, ctx, userId)
+}
+
+func NewAuthService(repository models.AuthRepository, redis *redis.Client) models.AuthService {
 	return &AuthService{
 		repository: repository,
+		redis:      redis,
 	}
 }

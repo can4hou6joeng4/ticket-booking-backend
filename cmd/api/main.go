@@ -50,23 +50,26 @@ func main() {
 
 	// Config
 	envConfig := config.NewEnvConfig()
-	db := db.Init(envConfig, db.DBMigrator)
+	redis := db.InitRedis(envConfig)
+	db := db.InitDatabase(envConfig, db.DBMigrator)
+
 	// Repository
 	eventRepository := repositories.NewEventRepository(db)
 	ticketRepository := repositories.NewTicketRepository(db)
 	authRepository := repositories.NewAuthRepository(db)
 	statisticsRepository := repositories.NewStatisticsRepository(db)
 	// Service
-	authService := services.NewAuthService(authRepository)
+	authService := services.NewAuthService(authRepository, redis)
 	// Routing
 	server := app.Group("/api")
 	handlers.NewAuthHandler(server.Group("/auth"), authService)
 
-	privateRoutes := server.Use(middlewares.AuthProtected(db))
+	privateRoutes := server.Use(middlewares.AuthProtected(db, redis))
+	handlers.NewAuthProtectedHandler(privateRoutes.Group("/auth"), authService)
 
 	handlers.NewEventHandler(privateRoutes.Group("/event"), eventRepository)
 	handlers.NewTicketHandler(privateRoutes.Group("/ticket"), ticketRepository)
 	handlers.NewStatisticsHandler(privateRoutes.Group("/statistics"), statisticsRepository)
 
-	app.Listen(fmt.Sprintf(":" + envConfig.ServerPort))
+	app.Listen(fmt.Sprintf(":%s", envConfig.ServerPort))
 }

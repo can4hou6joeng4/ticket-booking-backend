@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/config"
 
 	"github.com/gofiber/fiber/v2/log"
@@ -11,10 +12,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Init(config *config.EnvConfig, DBMigrator func(*gorm.DB) error) *gorm.DB {
+func InitDatabase(config *config.EnvConfig, DBMigrator func(*gorm.DB) error) *gorm.DB {
 	uri := fmt.Sprintf(`
 		host=%s user=%s dbname=%s password=%s sslmode=%s port=5432`,
-		config.DBHost, config.DBUser, config.DBName, config.DBPassword, config.DBSSLMode,
+		config.DBConfig.DBHost, config.DBConfig.DBUser, config.DBConfig.DBName, config.DBConfig.DBPassword, config.DBConfig.DBSSLMode,
 	)
 
 	db, err := gorm.Open(postgres.Open(uri), &gorm.Config{

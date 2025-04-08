@@ -5,18 +5,22 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/can4hou6joeng4/ticket-booking-project-v1/models"
+	"github.com/can4hou6joeng4/ticket-booking-project-v1/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-func AuthProtected(db *gorm.DB) fiber.Handler {
+func AuthProtected(db *gorm.DB, redis *redis.Client) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
+		// 1. 获取并验证Authorization header
 		authHeader := ctx.Get("Authorization")
-		if authHeader == " " {
+		if authHeader == "" {
 			log.Warnf("empty authorization header")
 
 			return ctx.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
@@ -24,7 +28,7 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 				"message": "Unauthorized",
 			})
 		}
-
+		// 2. 解析Bearer Token
 		// Bearer ajidosjdawsfqwoi23142
 		tokenParts := strings.Split(authHeader, " ")
 
@@ -37,6 +41,7 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
+		// 3. 解析Token
 		tokenStr := tokenParts[1]
 		secret := []byte(os.Getenv("JWT_SECRET"))
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -55,8 +60,21 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		userId := token.Claims.(jwt.MapClaims)["id"]
+		userId := uint(token.Claims.(jwt.MapClaims)["id"].(float64))
+		role := token.Claims.(jwt.MapClaims)["role"].(string)
 
+		// 4. 尝试从Redis获取用户会话
+		session, err := utils.GetUserSession(redis, ctx.Context(), userId)
+		if err == nil && len(session) > 0 {
+			if session["token"] == tokenStr {
+				// 设置用户信息到上下文
+				ctx.Locals("userId", userId)
+				ctx.Locals("userRole", role)
+				return ctx.Next()
+			}
+		}
+
+		// 5. 如果Redis中没有会话，尝试从数据库获取用户信息
 		var user models.User
 		if err := db.Model(&models.User{}).Where("id = ?", userId).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warnf("user not found in the db")
@@ -67,7 +85,17 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// 检查是否是管理员路由
+		// 6. 将用户会话存入Redis
+		err = utils.SetUserSession(redis, ctx.Context(), userId, tokenStr, role)
+		if err != nil {
+			log.Warnf("failed to set user session in redis: %v", err)
+		}
+
+		// 7. 设置会话过期时间
+		key := fmt.Sprintf("user:%d:session", userId)
+		utils.SetExpiration(redis, ctx.Context(), key, time.Hour*24)
+
+		// 8. 检查是否是管理员路由
 		if strings.Contains(ctx.Path(), "/statistics") && user.Role != models.Manager {
 			return ctx.Status(fiber.StatusForbidden).JSON(&fiber.Map{
 				"status":  "fail",
@@ -75,8 +103,9 @@ func AuthProtected(db *gorm.DB) fiber.Handler {
 			})
 		}
 
+		// 9. 设置用户信息到上下文
 		ctx.Locals("userId", userId)
-		ctx.Locals("userRole", user.Role)
+		ctx.Locals("userRole", role)
 		return ctx.Next()
 	}
 }

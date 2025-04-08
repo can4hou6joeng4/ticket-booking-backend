@@ -2,8 +2,9 @@ package models
 
 import (
 	"context"
-	"golang.org/x/crypto/bcrypt"
 	"net/mail"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthCredentials struct {
@@ -21,6 +22,7 @@ type AuthRepository interface {
 type AuthService interface {
 	Login(ctx context.Context, loginData *AuthCredentials) (string, *User, error)
 	Register(ctx context.Context, registerData *AuthCredentials) (string, *User, error)
+	Logout(ctx context.Context, userId uint) error
 }
 
 // MatchesHash Check if a password matches a hash

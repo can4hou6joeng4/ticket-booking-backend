@@ -109,10 +109,46 @@ func (h *AuthHandler) Register(ctx *fiber.Ctx) error {
 	})
 }
 
+// @Summary      Logout user
+// @Description  Logout user and invalidate session
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  Response
+// @Failure      400  {object}  Response
+// @Router       /api/auth/logout [post]
+func (h *AuthHandler) Logout(ctx *fiber.Ctx) error {
+	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	userId := ctx.Locals("userId").(uint)
+	if err := h.service.Logout(context, userId); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Successfully logged out",
+	})
+}
+
 func NewAuthHandler(router fiber.Router, service models.AuthService) {
 	handler := &AuthHandler{
 		service: service,
 	}
+	// 公开路由
 	router.Post("/login", handler.Login)
 	router.Post("/register", handler.Register)
+}
+
+func NewAuthProtectedHandler(router fiber.Router, service models.AuthService) {
+	handler := &AuthHandler{
+		service: service,
+	}
+	// 需要认证的路由
+	router.Post("/logout", handler.Logout)
 }

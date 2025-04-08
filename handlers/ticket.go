@@ -30,7 +30,7 @@ func (h *TicketHandler) CreateOne(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	ticket := &models.Ticket{}
-	userId := uint(ctx.Locals("userId").(float64))
+	userId := ctx.Locals("userId").(uint)
 	// ctx.BodyParser(ticket) 是 Fiber 框架提供的一个方法
 	// 它的作用是将 HTTP 请求的 请求体（Body） 自动解析并绑定到 Go 结构体（event 变量）上。
 	if err := ctx.BodyParser(ticket); err != nil {
@@ -68,7 +68,7 @@ func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	ticketId, _ := strconv.Atoi(ctx.Params("ticketId"))
-	userId := uint(ctx.Locals("userId").(float64))
+	userId := ctx.Locals("userId").(uint)
 	ticket, err := h.repository.GetOne(context, userId, uint(ticketId))
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
@@ -113,7 +113,7 @@ func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 func (h *TicketHandler) GetMany(ctx *fiber.Ctx) error {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	userId := uint(ctx.Locals("userId").(float64))
+	userId := ctx.Locals("userId").(uint)
 	tickets, err := h.repository.GetMany(context, userId)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
