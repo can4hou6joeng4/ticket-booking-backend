@@ -1,13 +1,5 @@
 basePath: /api
 definitions:
-  handlers.Response:
-    properties:
-      data: {}
-      message:
-        type: string
-      status:
-        type: string
-    type: object
   models.AuthCredentials:
     properties:
       email:
@@ -23,6 +15,8 @@ definitions:
       createdAt:
         type: string
       date:
+        type: string
+      endDate:
         type: string
       id:
         type: integer
@@ -49,10 +43,22 @@ definitions:
         type: integer
       id:
         type: integer
+      qrCode:
+        items:
+          type: integer
+        type: array
       updatedAt:
         type: string
       userId:
         type: integer
+    type: object
+  utils.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
     type: object
 host: localhost:8081
 info:
@@ -82,11 +88,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       summary: Login user
       tags:
       - auth
@@ -101,11 +107,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Logout user
@@ -129,11 +135,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       summary: Register new user
       tags:
       - auth
@@ -148,11 +154,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Get all events
@@ -175,15 +181,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Create new event
@@ -206,11 +212,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Delete event
@@ -232,11 +238,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Get event by ID
@@ -265,15 +271,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Update event
@@ -290,11 +296,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Get dashboard statistics
@@ -311,11 +317,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Get all tickets
@@ -338,15 +344,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Create new ticket
@@ -369,11 +375,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Get ticket by ID
@@ -396,11 +402,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/utils.Response'
       security:
       - BearerAuth: []
       summary: Validate ticket
