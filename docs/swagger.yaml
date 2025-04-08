@@ -90,6 +90,27 @@ paths:
       summary: Login user
       tags:
       - auth
+  /api/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and invalidate session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
   /api/auth/register:
     post:
       consumes:
