@@ -67,7 +67,7 @@ func main() {
 	privateRoutes := server.Use(middlewares.AuthProtected(db, redis))
 	handlers.NewAuthProtectedHandler(privateRoutes.Group("/auth"), authService)
 
-	handlers.NewEventHandler(privateRoutes.Group("/event"), eventRepository)
+	handlers.NewEventHandler(privateRoutes.Group("/event"), eventRepository,redis)
 	handlers.NewTicketHandler(privateRoutes.Group("/ticket"), ticketRepository, eventRepository, envConfig, redis)
 	handlers.NewStatisticsHandler(privateRoutes.Group("/statistics"), statisticsRepository)
 

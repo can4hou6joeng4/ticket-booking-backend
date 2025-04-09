@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -56,14 +57,13 @@ func (h *TicketHandler) CreateOne(ctx *fiber.Ctx) error {
 	// 生成二维码
 	var QRcode []byte
 	QRcode, err = qrcode.Encode(
-		fmt.Sprintf("ticketId:%d,ownerId:%d", ticket.ID, userId),
+		fmt.Sprintf("qrCode:ticketId:%d,ownerId:%d", ticket.ID, userId),
 		getQRLevel(h.config.QRConfig.QRLevel),
 		h.config.QRConfig.QRSize,
 	)
 	if err != nil {
 		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
-	ticket.QRCode = QRcode
 
 	// 获取活动信息并设置过期时间
 	expiration := time.Until(event.EndDate)
@@ -71,11 +71,51 @@ func (h *TicketHandler) CreateOne(ctx *fiber.Ctx) error {
 		expiration = 0
 	}
 
-	// 存储到Redis
-	key := fmt.Sprintf("ticket:%d,ownerId:%d", ticket.ID, userId)
-	if err := h.redis.Set(context, key, ticket.QRCode, expiration).Err(); err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, fmt.Errorf("failed to store QR code in Redis"))
-	}
+	// 异步缓存票据信息和QRCode
+	go func() {
+		// 创建新的上下文用于异步操作
+		asyncCtx, cancel := utils.CreateTimeoutContext(60 * time.Second)
+		defer cancel()
+
+		// 1. 缓存票据信息（不包含QRCode）
+		// 包含Event信息
+		eventData := map[string]interface{}{
+			"ID":                    event.ID,
+			"Name":                  event.Name,
+			"Location":              event.Location,
+			"Date":                  event.Date,
+			"EndDate":               event.EndDate,
+			"TotalTicketsPurchased": event.TotalTicketsPurchased,
+			"TotalTicketsEntered":   event.TotalTicketsEntered,
+		}
+
+		ticketData := map[string]interface{}{
+			"ID":        ticket.ID,
+			"UserID":    ticket.UserID,
+			"EventID":   ticket.EventID,
+			"Entered":   ticket.Entered,
+			"CreatedAt": ticket.CreatedAt,
+			"UpdatedAt": ticket.UpdatedAt,
+			"Event":     eventData, // 添加Event信息
+		}
+
+		// 序列化票据数据
+		ticketJSON, err := json.Marshal(ticketData)
+		if err == nil {
+			// 票据信息缓存键
+			ticketCacheKey := fmt.Sprintf("ticket:info:%d:user:%d", ticket.ID, userId)
+			// 缓存票据信息，与活动结束时间相同的过期时间
+			h.redis.Set(asyncCtx, ticketCacheKey, ticketJSON, expiration)
+		}
+
+		// 2. 缓存QRCode
+		qrCodeKey := fmt.Sprintf("qrCode:ticketId:%d,ownerId:%d", ticket.ID, userId)
+		h.redis.Set(asyncCtx, qrCodeKey, QRcode, expiration)
+
+		// 3. 删除用户票据列表缓存，确保下次获取列表时能获取最新数据
+		userTicketsKey := fmt.Sprintf("tickets:user:%d", userId)
+		h.redis.Del(asyncCtx, userTicketsKey)
+	}()
 
 	return utils.SuccessResponse(ctx, fiber.StatusCreated, "Ticket created successfully", ticket)
 }
@@ -95,16 +135,124 @@ func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 	defer cancel()
 	ticketId, _ := strconv.Atoi(ctx.Params("ticketId"))
 	userId := ctx.Locals("userId").(uint)
-	ticket, err := h.ticketRepository.GetOne(context, userId, uint(ticketId))
+
+	var ticket *models.Ticket
+	var QRcode []byte
+	var err error
+
+	// 尝试从Redis获取票据信息
+	ticketInfoKey := fmt.Sprintf("ticket:info:%d:user:%d", ticketId, userId)
+	cachedTicketData, err := h.redis.Get(context, ticketInfoKey).Bytes()
+	if err == nil {
+		// 票据信息缓存命中
+		var ticketData map[string]interface{}
+		if err := json.Unmarshal(cachedTicketData, &ticketData); err == nil {
+			// 手动构建票据对象
+			ticket = &models.Ticket{
+				ID:      uint(ticketData["ID"].(float64)),
+				UserID:  uint(ticketData["UserID"].(float64)),
+				EventID: uint(ticketData["EventID"].(float64)),
+				Entered: ticketData["Entered"].(bool),
+			}
+
+			// 处理Event信息
+			if eventData, ok := ticketData["Event"].(map[string]interface{}); ok {
+				ticket.Event = models.Event{
+					ID:       uint(eventData["ID"].(float64)),
+					Name:     eventData["Name"].(string),
+					Location: eventData["Location"].(string),
+				}
+
+				// 处理票券统计信息
+				if tp, ok := eventData["TotalTicketsPurchased"].(float64); ok {
+					ticket.Event.TotalTicketsPurchased = int64(tp)
+				}
+
+				if te, ok := eventData["TotalTicketsEntered"].(float64); ok {
+					ticket.Event.TotalTicketsEntered = int64(te)
+				}
+
+				// 处理Event的日期字段
+				if dateStr, ok := eventData["Date"].(string); ok {
+					date, err := time.Parse(time.RFC3339, dateStr)
+					if err == nil {
+						ticket.Event.Date = date
+					}
+				}
+
+				if endDateStr, ok := eventData["EndDate"].(string); ok {
+					endDate, err := time.Parse(time.RFC3339, endDateStr)
+					if err == nil {
+						ticket.Event.EndDate = endDate
+					}
+				}
+			}
+
+			// 处理时间字段
+			if createdAtStr, ok := ticketData["CreatedAt"].(string); ok {
+				createdAt, err := time.Parse(time.RFC3339, createdAtStr)
+				if err == nil {
+					ticket.CreatedAt = createdAt
+				}
+			}
+
+			if updatedAtStr, ok := ticketData["UpdatedAt"].(string); ok {
+				updatedAt, err := time.Parse(time.RFC3339, updatedAtStr)
+				if err == nil {
+					ticket.UpdatedAt = updatedAt
+				}
+			}
+		}
+	}
+
+	// 如果票据信息缓存未命中，从数据库获取
+	if ticket == nil {
+		ticket, err = h.ticketRepository.GetOne(context, userId, uint(ticketId))
+		if err != nil {
+			return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
+		}
+
+		// 异步缓存票据信息
+		go func() {
+			// 创建新的上下文用于异步操作
+			ctx, cancel := utils.CreateTimeoutContext(60 * time.Second)
+			defer cancel()
+
+			// 包含Event信息
+			eventData := map[string]interface{}{
+				"ID":                    ticket.Event.ID,
+				"Name":                  ticket.Event.Name,
+				"Location":              ticket.Event.Location,
+				"Date":                  ticket.Event.Date,
+				"EndDate":               ticket.Event.EndDate,
+				"TotalTicketsPurchased": ticket.Event.TotalTicketsPurchased,
+				"TotalTicketsEntered":   ticket.Event.TotalTicketsEntered,
+			}
+
+			ticketData := map[string]interface{}{
+				"ID":        ticket.ID,
+				"UserID":    ticket.UserID,
+				"EventID":   ticket.EventID,
+				"Entered":   ticket.Entered,
+				"CreatedAt": ticket.CreatedAt,
+				"UpdatedAt": ticket.UpdatedAt,
+				"Event":     eventData, // 添加Event信息
+			}
+
+			ticketJSON, err := json.Marshal(ticketData)
+			if err == nil {
+				h.redis.Set(ctx, ticketInfoKey, ticketJSON, time.Hour)
+			}
+		}()
+	}
+
+	// 从Redis获取二维码
+	qrCodeKey := fmt.Sprintf("qrCode:ticketId:%d,ownerId:%d", ticketId, userId)
+	QRcode, err = h.redis.Get(context, qrCodeKey).Bytes()
 	if err != nil {
 		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
 
-	// 从Redis中获取二维码
-	QRcode, err := h.redis.Get(context, fmt.Sprintf("ticket:%d,ownerId:%d", ticketId, userId)).Bytes()
-	if err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
-	}
 	// 若QRCode为空，则表示二维码已过期
 	if len(QRcode) == 0 {
 		return utils.ErrorResponseWithData(ctx, fiber.StatusBadRequest, fmt.Errorf("QR code expired"), map[string]interface{}{
@@ -112,10 +260,13 @@ func (h *TicketHandler) GetOne(ctx *fiber.Ctx) error {
 		})
 	}
 
-	return utils.SuccessResponse(ctx, fiber.StatusOK, "", map[string]interface{}{
+	// 构建响应数据
+	responseData := map[string]interface{}{
 		"ticket": ticket,
 		"qrcode": QRcode,
-	})
+	}
+
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "", responseData)
 }
 
 func getQRLevel(level string) qrcode.RecoveryLevel {
@@ -146,10 +297,39 @@ func (h *TicketHandler) GetMany(ctx *fiber.Ctx) error {
 	context, cancel := utils.CreateTimeoutContext(0)
 	defer cancel()
 	userId := ctx.Locals("userId").(uint)
+
+	// 尝试从Redis获取缓存
+	cacheKey := fmt.Sprintf("tickets:user:%d", userId)
+	cachedData, err := h.redis.Get(context, cacheKey).Bytes()
+	if err == nil {
+		// 缓存命中
+		var tickets []*models.Ticket
+		if err := json.Unmarshal(cachedData, &tickets); err == nil {
+			return utils.SuccessResponse(ctx, fiber.StatusOK, "", tickets)
+		}
+	}
+
+	// 从数据库获取
 	tickets, err := h.ticketRepository.GetMany(context, userId)
 	if err != nil {
 		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
+
+	// 异步缓存结果
+	go func() {
+		ctx, cancel := utils.CreateTimeoutContext(60 * time.Second)
+		defer cancel()
+
+		// 序列化票据数据
+		ticketsJSON, err := json.Marshal(tickets)
+		if err != nil {
+			return
+		}
+
+		// 设置一个合理的过期时间（例如1小时）
+		h.redis.Set(ctx, cacheKey, ticketsJSON, time.Hour)
+	}()
+
 	return utils.SuccessResponse(ctx, fiber.StatusOK, "", tickets)
 }
 
@@ -176,6 +356,23 @@ func (h *TicketHandler) ValidateOne(ctx *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, err)
 	}
+
+	// 异步更新或删除相关缓存
+	go func() {
+		ctx, cancel := utils.CreateTimeoutContext(60 * time.Second)
+		defer cancel()
+
+		// 票据相关缓存键
+		ticketInfoKey := fmt.Sprintf("ticket:info:%d:user:%d", validateBody.TicketId, validateBody.OwnerId)
+		userTicketsKey := fmt.Sprintf("tickets:user:%d", validateBody.OwnerId)
+
+		// 事件相关缓存键
+		eventCacheKey := fmt.Sprintf("event:%d", ticket.EventID)
+
+		// 删除缓存以确保下次获取最新数据
+		h.redis.Del(ctx, ticketInfoKey, userTicketsKey, eventCacheKey)
+	}()
+
 	return utils.SuccessResponse(ctx, fiber.StatusOK, "Welcome to the show", ticket)
 }
 

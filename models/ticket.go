@@ -10,7 +10,6 @@ type Ticket struct {
 	EventID   uint      `json:"eventId"`
 	UserID    uint      `json:"userId" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Event     Event     `json:"event" gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	QRCode    []byte    `json:"qrCode" gorm:"-"`
 	Entered   bool      `json:"entered"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
