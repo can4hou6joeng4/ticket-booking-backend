@@ -1,6 +1,6 @@
 start:
-	@docker compose up --build
+	@docker compose -p ticket-booking up --build
 
 stop:
-	@docker compose rm -v --force --stop
+	@docker compose -p ticket-booking rm -v --force --stop
 	@docker rmi ticket-booking
