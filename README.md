@@ -2,6 +2,26 @@
 
 这是一个基于Go语言开发的现代化票务预订系统后端服务。系统采用微服务架构设计，提供完整的票务管理、用户认证、订单处理等功能。通过RESTful API接口，支持多平台接入，确保系统的高可用性和可扩展性。
 
+## 🛠️ 技术栈
+
+<div align="center">
+  
+| 类别 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| **后端** | ![Go](https://img.shields.io/badge/Go-1.24-blue?style=flat&logo=go) | 1.24 | 高性能编程语言 |
+| **Web框架** | ![Fiber](https://img.shields.io/badge/Fiber-v2-00ADD8?style=flat&logo=go) | v2 | 高性能Web框架 |
+| **数据库** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat&logo=postgresql) | 15+ | 关系型数据库 |
+| **缓存** | ![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat&logo=redis) | 7.0 | 内存数据库 |
+| **ORM** | ![GORM](https://img.shields.io/badge/GORM-v1.25-00ADD8?style=flat&logo=go) | v1.25 | Go ORM库 |
+| **认证** | ![JWT](https://img.shields.io/badge/JWT-v5-000000?style=flat&logo=jsonwebtokens) | v5 | 身份认证 |
+| **配置** | ![godotenv](https://img.shields.io/badge/godotenv-v1.5-ECD53F?style=flat&logo=dotenv) | v1.5 | 环境变量管理 |
+| **文档** | ![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger) | 2.0 | API文档生成 |
+| **容器** | ![Docker](https://img.shields.io/badge/Docker-24.0-2496ED?style=flat&logo=docker) | 24.0 | 容器化部署 |
+| **开发工具** | ![Air](https://img.shields.io/badge/Air-1.52-00ADD8?style=flat&logo=go) | 1.52 | 热重载工具 |
+| **二维码** | ![QRCode](https://img.shields.io/badge/QRCode-1.0-000000?style=flat&logo=qrcode) | 1.0 | 二维码生成 |
+
+</div>
+
 ## 🚀 功能特性
 
 - **用户管理**
@@ -41,26 +61,6 @@
   - 数据验证
   - 并发控制
   - 数据一致性保证
-
-## 🛠️ 技术栈
-
-<div align="center">
-  
-| 类别 | 技术 | 版本 | 说明 |
-|------|------|------|------|
-| **后端** | ![Go](https://img.shields.io/badge/Go-1.24-blue?style=flat&logo=go) | 1.24 | 高性能编程语言 |
-| **Web框架** | ![Fiber](https://img.shields.io/badge/Fiber-v2-00ADD8?style=flat&logo=go) | v2 | 高性能Web框架 |
-| **数据库** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat&logo=postgresql) | 15+ | 关系型数据库 |
-| **缓存** | ![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat&logo=redis) | 7.0 | 内存数据库 |
-| **ORM** | ![GORM](https://img.shields.io/badge/GORM-v1.25-00ADD8?style=flat&logo=go) | v1.25 | Go ORM库 |
-| **认证** | ![JWT](https://img.shields.io/badge/JWT-v5-000000?style=flat&logo=jsonwebtokens) | v5 | 身份认证 |
-| **配置** | ![godotenv](https://img.shields.io/badge/godotenv-v1.5-ECD53F?style=flat&logo=dotenv) | v1.5 | 环境变量管理 |
-| **文档** | ![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger) | 2.0 | API文档生成 |
-| **容器** | ![Docker](https://img.shields.io/badge/Docker-24.0-2496ED?style=flat&logo=docker) | 24.0 | 容器化部署 |
-| **开发工具** | ![Air](https://img.shields.io/badge/Air-1.52-00ADD8?style=flat&logo=go) | 1.52 | 热重载工具 |
-| **二维码** | ![QRCode](https://img.shields.io/badge/QRCode-1.0-000000?style=flat&logo=qrcode) | 1.0 | 二维码生成 |
-
-</div>
 
 ## 📋 系统要求
 
